@@ -36,11 +36,16 @@ class MainScreen(private val viewModel: MainViewModel?) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 UserHeaderMainScreen()
-                viewModel?.taskTrackBarInformationList?.forEach { (taskTrackerBarInfo, tasks) ->
+                viewModel?.taskTrackBarInformationList?.forEachIndexed { index, (taskTrackerBarInfo, tasks) ->
+                    val colorIndex = index / 2 % colorList.size
+                    val currentColor = colorList[colorIndex]
+
                     TaskTrackerBar(
                         tasks = tasks,
                         taskTrackerBarInformation = taskTrackerBarInfo,
-                        viewModel = viewModel // Pass the viewModel here
+                        viewModel = viewModel,
+                        currentClassName = taskTrackerBarInfo.className,
+                        currentColor = currentColor // Pass this color
                     )
                 }
             }
@@ -51,7 +56,11 @@ class MainScreen(private val viewModel: MainViewModel?) {
 
     @Composable
     private fun UserHeaderMainScreen() {
-        Box(modifier = Modifier.background(Color.hsl(148f, .0f, 0.87f))) {
+        Box(
+            modifier = Modifier
+                .background(Color.hsl(148f, .0f, 0.87f))
+                .clip(RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 10.dp, bottomStart = 10.dp)) // Add rounded corners here
+        ) {
             Row {
                 Box(modifier = Modifier, contentAlignment = Alignment.CenterStart) {
                     HeaderAndroidLogo()
@@ -83,10 +92,10 @@ class MainScreen(private val viewModel: MainViewModel?) {
                 Text(
                     text = "Android",
                     fontWeight = FontWeight.Bold,
-                    fontStyle = FontStyle(R.font.inter_regular),
+                    fontStyle = FontStyle(R.font.public_sans),
                     fontSize = 18.sp
                 )
-                Text(text = "Task Tracker", fontStyle = FontStyle((R.font.inter_regular)))
+                Text(text = "Task Tracker", fontStyle = FontStyle(R.font.public_sans))
             }
         }
     }

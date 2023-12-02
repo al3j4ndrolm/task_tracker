@@ -81,4 +81,31 @@ class MainViewModel : ViewModel() {
             taskTrackBarInformationList.add(Pair(newClassInfo, newTasksList))
         }
     }
+    fun addTaskToClass(className: String, taskDescription: String) {
+        val classIndex = taskTrackBarInformationList.indexOfFirst { it.first.className == className }
+        if (classIndex != -1) {
+            val updatedTasksList = taskTrackBarInformationList[classIndex].second.toMutableList().apply {
+                add(TaskInformation(taskDescription, false))
+            }
+
+            // Now the updatedTasksList can be used outside the apply block
+            taskTrackBarInformationList[classIndex] = taskTrackBarInformationList[classIndex].first to updatedTasksList
+
+            // Update the list and recalculate progress...
+            // Your progress update logic here
+        }
+    }
+
+    fun deleteTask(className: String, taskDescription: String) {
+        val classIndex = taskTrackBarInformationList.indexOfFirst { it.first.className == className }
+        if (classIndex != -1) {
+            val updatedTasksList = taskTrackBarInformationList[classIndex].second.filter {
+                it.description != taskDescription
+            }.toMutableList()
+
+            taskTrackBarInformationList[classIndex] = taskTrackBarInformationList[classIndex].first to updatedTasksList
+
+            // Recalculate progress and update the list...
+        }
+    }
 }

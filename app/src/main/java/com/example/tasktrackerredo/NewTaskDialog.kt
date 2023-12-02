@@ -22,22 +22,17 @@ class NewTaskDialog {
     @Composable
     fun EditTaskDialog(
         onDismiss: () -> Unit,
-        onSave: (String, TaskInformation) -> Unit // New onSave parameter
+        onSave: (String) -> Unit // Update this to only have the task description
     ) {
-        val className = remember { mutableStateOf("") } // For new class name
         remember { mutableStateOf("") }
         val taskDescription = remember { mutableStateOf("") }
 
         Dialog(onDismissRequest = onDismiss) {
             Card {
-                Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                Column(modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()) {
                     Text("My Task")
-
-                    TextField(
-                        value = className.value,
-                        onValueChange = { className.value = it },
-                        label = { Text("Class Name") }
-                    )
 
                     TextField(
                         value = taskDescription.value,
@@ -48,9 +43,10 @@ class NewTaskDialog {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(onClick = {
-                        val newTask = TaskInformation(taskDescription.value, false)
-                        onSave(className.value, newTask)
-                        onDismiss()
+                        if (taskDescription.value.isNotBlank()) {
+                            onSave(taskDescription.value)
+                            onDismiss()
+                        }
                     }) {
                         Text("Save")
                     }
@@ -59,3 +55,4 @@ class NewTaskDialog {
         }
     }
 }
+
