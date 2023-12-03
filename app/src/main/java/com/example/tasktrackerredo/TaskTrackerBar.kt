@@ -5,10 +5,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +24,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,25 +33,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 val colorList = listOf(
-    Color.hsl(217f, 0.89f, 0.61f),
-    Color.hsl(5f, 0.81f, 0.56f),
-    Color.hsl(45f, 0.97f, 0.50f),
-    Color.hsl(136f, 0.53f, 0.43f)
+    Color.hsl(217f, 0.89f, 0.70f),
+    Color.hsl(5f, 0.81f, 0.70f),
+    Color.hsl(45f, 0.97f, 0.70f),
+    Color.hsl(136f, 0.53f, 0.70f)
 )
+
 @Composable
 fun TaskTrackerBar(
     taskTrackerBarInformation: TaskTrackerBarInformation, // This parameter should be defined
     tasks: List<TaskInformation>,
     viewModel: MainViewModel?,
     currentClassName: String,
-    currentColor: Color
+    currentColor: Color,
+    showDeleteClassDialog: MutableState<Boolean>
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showTaskDialog by remember { mutableStateOf(false) }
@@ -69,14 +73,42 @@ fun TaskTrackerBar(
             ClassTitle(taskTrackerBarInformation, tasks.size)
             ClassProgressBar(
                 progress = taskTrackerBarInformation.taskProgressPercentage,
-                color = currentColor)
+                color = currentColor,
+                onClick = { showTaskDialog = true },
+                onLongPress = { showDeleteClassDialog.value = true }
+            )
+
+            if (showDeleteClassDialog.value) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteClassDialog.value = false },
+                    title = { Text("Delete Class") },
+                    text = { Text("Are you sure you want to delete the entire class and its tasks?") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                viewModel?.deleteClass(taskTrackerBarInformation.className)
+                                showDeleteClassDialog.value = false
+                            }
+                        ) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { showDeleteClassDialog.value = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
             ClassProgressBarPercentage(taskTrackerBarInformation.taskProgressPercentage)
 
             if (expanded) {
                 if (tasks.isEmpty()) {
                     Text(
-                        "Oops! Looks like there are no tasks here yet",
-                        modifier = Modifier.padding(16.dp)
+                        "Press the progress bar to create a new task",
+                        modifier = Modifier.padding(16.dp),
+                        fontStyle = FontStyle.Italic
                     )
                 } else {
                     tasks.forEach { task ->
@@ -84,7 +116,11 @@ fun TaskTrackerBar(
                             taskInfo = task.description,
                             isChecked = task.isCompleted,
                             onCheckedChange = { isChecked ->
-                                viewModel?.updateTaskCompletion(currentClassName, task.description, isChecked)
+                                viewModel?.updateTaskCompletion(
+                                    currentClassName,
+                                    task.description,
+                                    isChecked
+                                )
                             },
                             onLongPress = {
                                 selectedTaskDescription = task.description
@@ -101,6 +137,7 @@ fun TaskTrackerBar(
             // Show confirmation dialog
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
+                containerColor = Color.LightGray,
                 title = { Text("Delete Task") },
                 text = { Text("Are you sure you want to delete this task?") },
                 confirmButton = {
@@ -108,39 +145,21 @@ fun TaskTrackerBar(
                         onClick = {
                             viewModel?.deleteTask(currentClassName, selectedTaskDescription)
                             showDeleteDialog = false
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.71f))
                     ) {
                         Text("Confirm")
                     }
                 },
                 dismissButton = {
-                    Button(onClick = { showDeleteDialog = false }) {
+                    Button(
+                        onClick = { showDeleteDialog = false },
+                        colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.71f))
+                    ) {
                         Text("Cancel")
                     }
                 }
             )
-        }
-
-
-        // Add Task Button, visible and aligned only when expanded
-        if (expanded) {
-            Button(
-                onClick = { showTaskDialog = true },
-                colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.81f)),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(10.dp)
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(30.dp)),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.add_fill0_wght400_grad0_opsz24),
-                    contentDescription = "",
-                    modifier = Modifier.size(30.dp),
-                    colorFilter = ColorFilter.tint(Color.White)
-                )
-            }
         }
 
         if (showTaskDialog) {
@@ -179,7 +198,12 @@ private fun ClassTitle(taskTrackerBarInformation: TaskTrackerBarInformation, tas
 }
 
 @Composable
-private fun ClassProgressBar(progress: Float, color: Color) {
+private fun ClassProgressBar(
+    progress: Float,
+    color: Color,
+    onClick: () -> Unit,
+    onLongPress: () -> Unit
+) {
     LinearProgressIndicator(
         progress = progress,
         color = color,
@@ -188,6 +212,13 @@ private fun ClassProgressBar(progress: Float, color: Color) {
             .size(height = 15.dp, width = 0.dp)
             .padding(horizontal = 10.dp)
             .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = { onLongPress() },
+                    onPress = { /* Called when the user presses down on the screen */ }
+                )
+            }
     )
 }
 
@@ -254,7 +285,8 @@ private fun TasksListItem(
             colors = CheckboxDefaults.colors(
                 checkedColor = color,
                 uncheckedColor = Color.Gray, // Or any other color for the unchecked state
-                checkmarkColor = Color.White), // Color of the checkmark
+                checkmarkColor = Color.White
+            ), // Color of the checkmark
             modifier = Modifier.padding(start = 10.dp)
         )
 

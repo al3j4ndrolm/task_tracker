@@ -28,7 +28,9 @@ class NewClassDialog {
 
         Dialog(onDismissRequest = onDismiss) {
             Card {
-                Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                Column(modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()) {
                     Text("Create New Class")
 
                     TextField(

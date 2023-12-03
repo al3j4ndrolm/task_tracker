@@ -29,9 +29,11 @@ class NewTaskDialog {
 
         Dialog(onDismissRequest = onDismiss) {
             Card {
-                Column(modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
                     Text("My Task")
 
                     TextField(
