@@ -26,39 +26,6 @@ class MainViewModel : ViewModel() {
         )
     }
 
-    fun handleSaveAction(className: String, newTask: TaskInformation) {
-        val classIndex =
-            taskTrackBarInformationList.indexOfFirst { it.first.className == className }
-        if (classIndex != -1) {
-            // Class already exists, add the new task
-            val updatedClassInfo = taskTrackBarInformationList[classIndex].first
-            val updatedTasksList =
-                taskTrackBarInformationList[classIndex].second.toMutableList().apply {
-                    add(newTask) // Add the new task
-                }
-
-            // Recalculate progress
-            val completedTasks = updatedTasksList.count { it.isCompleted }
-            val progress =
-                if (updatedTasksList.isNotEmpty()) completedTasks.toFloat() / updatedTasksList.size else 0f
-            updatedClassInfo.taskProgressPercentage = progress
-
-            // Update the list to trigger recomposition
-            taskTrackBarInformationList[classIndex] = updatedClassInfo to updatedTasksList
-        } else {
-            // Class does not exist, create a new class and add the task
-            val initialProgress =
-                if (newTask.isCompleted) 1.0f / 1.0f else 0.0f // Assuming one task, progress is either 0% or 100%
-            taskTrackBarInformationList.add(
-                Pair(
-                    TaskTrackerBarInformation(className, initialProgress),
-                    mutableListOf(newTask)
-                )
-            )
-        }
-    }
-
-
     fun updateTaskCompletion(className: String, taskDescription: String, isCompleted: Boolean) {
         val classIndex =
             taskTrackBarInformationList.indexOfFirst { it.first.className == className }

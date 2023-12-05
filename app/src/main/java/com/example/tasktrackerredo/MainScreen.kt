@@ -36,8 +36,8 @@ class MainScreen(private val viewModel: MainViewModel?) {
 
     @Composable
     fun Launch() {
-
         val hasClasses = viewModel?.taskTrackBarInformationList?.isNotEmpty() == true
+        val newTaskDialog = NewTaskDialog()
 
         Box(modifier = Modifier.fillMaxSize()) {
 
@@ -45,11 +45,12 @@ class MainScreen(private val viewModel: MainViewModel?) {
                 LazyColumn {
                     item { UserHeaderMainScreen() }
                     itemsIndexed(
-                        viewModel?.taskTrackBarInformationList ?: listOf()
-                    ) { index, (taskTrackerBarInfo, tasks) ->
+                        viewModel?.taskTrackBarInformationList ?: listOf()) { index, (taskTrackerBarInfo, tasks) ->
                         val colorIndex = index / 2 % colorList.size
                         val currentColor = colorList[colorIndex]
                         val showDeleteClassDialog = remember { mutableStateOf(false) }
+                        val showDeleteDialog = remember { mutableStateOf(false) } // Define the state here
+                        val showTaskDialog = remember { mutableStateOf(false) } // Define the state here
 
                         TaskTrackerBar(
                             tasks = tasks,
@@ -57,7 +58,11 @@ class MainScreen(private val viewModel: MainViewModel?) {
                             viewModel = viewModel,
                             currentClassName = taskTrackerBarInfo.className,
                             currentColor = currentColor,
-                            showDeleteClassDialog = showDeleteClassDialog
+                            showDeleteClassDialog = showDeleteClassDialog,
+                            onAddTaskClicked = { showTaskDialog.value = true },
+                            showDeleteDialog = showDeleteDialog, // Pass the state
+                            showTaskDialog = showTaskDialog,
+                            onAddNewTaskClicked = { showTaskDialog.value = true }
                         )
 
                         if (showDeleteClassDialog.value) {
@@ -83,10 +88,25 @@ class MainScreen(private val viewModel: MainViewModel?) {
                                 }
                             )
                         }
+
+                        if (showTaskDialog.value) {
+                            // Retrieve the list of existing task descriptions for the current class
+                            val existingTaskDescriptions = tasks.map { it.description }
+
+                            // Show the dialog for creating a new task
+                            newTaskDialog.EditTaskDialog(
+                                onDismiss = { showTaskDialog.value = false },
+                                onSave = { taskDescription ->
+                                    viewModel?.addTaskToClass(taskTrackerBarInfo.className, taskDescription)
+                                    showTaskDialog.value = false
+                                },
+                                existingTaskDescriptions = existingTaskDescriptions // Pass the list of existing descriptions
+                            )
+                        }
                     }
                 }
             } else {
-                // Display the message and logo when there are no classes
+                UserHeaderMainScreen()
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxSize()
