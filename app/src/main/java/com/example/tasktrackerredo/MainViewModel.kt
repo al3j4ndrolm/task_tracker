@@ -93,4 +93,7 @@ class MainViewModel : ViewModel() {
         // Logic to remove the class from the list
         taskTrackBarInformationList.removeIf { it.first.className == className }
     }
+    fun deleteAllClassesAndTasks() {
+        taskTrackBarInformationList.clear()
+    }
 }

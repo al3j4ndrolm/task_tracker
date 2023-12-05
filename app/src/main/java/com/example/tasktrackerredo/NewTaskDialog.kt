@@ -4,9 +4,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,7 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
@@ -27,30 +27,11 @@ class NewTaskDialog {
     fun EditTaskDialog(
         onDismiss: () -> Unit,
         onSave: (String) -> Unit,
-        existingTaskDescriptions: List<String> // Add this parameter
+        existingTaskDescriptions: List<String>
     ) {
         val taskDescription = remember { mutableStateOf("") }
         val isError = remember { mutableStateOf(false) }
         val errorMessage = remember { mutableStateOf("") }
-
-        // Define validateAndSaveTask function here
-        fun validateAndSaveTask() {
-            val trimmedDescription = taskDescription.value.trim()
-            when {
-                trimmedDescription.isBlank() -> {
-                    errorMessage.value = "Task description cannot be empty"
-                    isError.value = true
-                }
-                existingTaskDescriptions.contains(trimmedDescription) -> {
-                    errorMessage.value = "Task description already exists"
-                    isError.value = true
-                }
-                else -> {
-                    onSave(trimmedDescription)
-                    onDismiss()
-                }
-            }
-        }
 
         Dialog(onDismissRequest = onDismiss) {
             Card {
@@ -69,8 +50,10 @@ class NewTaskDialog {
                         },
                         label = { Text("Task Description") },
                         isError = isError.value,
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { validateAndSaveTask() })
+                        modifier = Modifier
+                            .heightIn(max = 200.dp) // Set a maximum height
+                            .verticalScroll(rememberScrollState()), // Make it scrollable
+                        maxLines = 10 // Set a reasonable maximum number of lines
                     )
 
                     if (isError.value) {
@@ -83,7 +66,31 @@ class NewTaskDialog {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Button(onClick = { validateAndSaveTask() }) {
+                    Button(onClick = {
+                        val trimmedDescription = taskDescription.value.trim()
+                        when {
+                            trimmedDescription.isBlank() -> {
+                                errorMessage.value = "Task description cannot be empty"
+                                isError.value = true
+                            }
+
+                            trimmedDescription.length > 90 -> {
+                                errorMessage.value =
+                                    "Task description is too long (max 60 characters)"
+                                isError.value = true
+                            }
+
+                            existingTaskDescriptions.contains(trimmedDescription) -> {
+                                errorMessage.value = "Task description already exists"
+                                isError.value = true
+                            }
+
+                            else -> {
+                                onSave(trimmedDescription)
+                                onDismiss()
+                            }
+                        }
+                    }) {
                         Text("Save")
                     }
                 }
