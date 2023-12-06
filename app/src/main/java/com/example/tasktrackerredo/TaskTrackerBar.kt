@@ -52,7 +52,6 @@ val colorList = listOf(
 @Composable
 fun TaskTrackerBar(
     taskTrackerBarInformation: TaskTrackerBarInformation,
-    tasks: List<TaskInformation>,
     viewModel: MainViewModel?,
     currentClassName: String,
     currentColor: Color,
@@ -69,12 +68,12 @@ fun TaskTrackerBar(
 
 
     // Observe changes in tasks and taskTrackerBarInformation
-    LaunchedEffect(taskTrackerBarInformation, tasks) {
+    LaunchedEffect(taskTrackerBarInformation, taskTrackerBarInformation.tasks) {
         progress = taskTrackerBarInformation.taskProgressPercentage
     }
     Box(modifier = Modifier.fillMaxWidth()) {
         Column {
-            ClassTitle(taskTrackerBarInformation, tasks.size)
+            ClassTitle(taskTrackerBarInformation, taskTrackerBarInformation.tasks.size)
             ClassProgressBar(
                 progress = taskTrackerBarInformation.taskProgressPercentage,
                 color = currentColor,
@@ -90,7 +89,7 @@ fun TaskTrackerBar(
                     confirmButton = {
                         Button(
                             onClick = {
-                                viewModel?.deleteClass(taskTrackerBarInformation.className)
+                                viewModel?.deleteClass(taskTrackerBarInformation.getClassName())
                                 showDeleteClassDialog.value = false
                             }
                         ) {
@@ -108,14 +107,14 @@ fun TaskTrackerBar(
             ClassProgressBarPercentage(taskTrackerBarInformation.taskProgressPercentage)
 
             if (expanded) {
-                if (tasks.isEmpty()) {
+                if (taskTrackerBarInformation.tasks.isEmpty()) {
                     Text(
                         "Press \"+\" to create a new task",
                         modifier = Modifier.padding(16.dp),
                         fontStyle = FontStyle.Italic
                     )
                 } else {
-                    tasks.forEach { task ->
+                    taskTrackerBarInformation.tasks.forEach { task ->
                         TasksListItem(
                             taskInfo = task.description,
                             isChecked = task.isCompleted,
@@ -171,8 +170,8 @@ fun TaskTrackerBar(
                 if (showTaskDialog.value) {
                     // Extract existing task descriptions for the specific class
                     val existingTaskDescriptions = viewModel?.taskTrackBarInformationList
-                        ?.firstOrNull { it.first.className == taskTrackerBarInformation.className }
-                        ?.second
+                        ?.firstOrNull { it.getClassName() == taskTrackerBarInformation.getClassName() }
+                        ?.tasks
                         ?.map { it.description }
                         ?: emptyList()
 
@@ -180,7 +179,7 @@ fun TaskTrackerBar(
                         onDismiss = { showTaskDialog.value = false },
                         onSave = { taskDescription ->
                             viewModel?.addTaskToClass(
-                                taskTrackerBarInformation.className,
+                                taskTrackerBarInformation.getClassName(),
                                 taskDescription
                             )
                             showTaskDialog.value = false
@@ -219,7 +218,7 @@ private fun ClassTitle(taskTrackerBarInformation: TaskTrackerBarInformation, tas
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = taskTrackerBarInformation.className,
+            text = taskTrackerBarInformation.getClassName(),
             fontWeight = FontWeight.Bold
         )
 

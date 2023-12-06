@@ -32,7 +32,10 @@ class MainScreen(private val viewModel: MainViewModel?) {
             drawerState = drawerState,
             viewModel = viewModel
         ) {
-            MainContent(drawerState, coroutineScope) // This is a hypothetical function for the main content
+            MainContent(
+                drawerState,
+                coroutineScope
+            ) // This is a hypothetical function for the main content
         }
     }
 
@@ -46,7 +49,7 @@ class MainScreen(private val viewModel: MainViewModel?) {
                     item { UserHeaderMainScreen(drawerState, coroutineScope) }
                     itemsIndexed(
                         viewModel?.taskTrackBarInformationList ?: listOf()
-                    ) { index, (taskTrackerBarInfo, tasks) ->
+                    ) { index, taskTrackerBarInfo ->
                         val colorIndex = index / 2 % colorList.size
                         val currentColor = colorList[colorIndex]
                         val showDeleteClassDialog = remember { mutableStateOf(false) }
@@ -55,10 +58,10 @@ class MainScreen(private val viewModel: MainViewModel?) {
                         val showTaskDialog =
                             remember { mutableStateOf(false) } // Define the state here
 
-                        TaskTrackerBar(tasks = tasks,
+                        TaskTrackerBar(
                             taskTrackerBarInformation = taskTrackerBarInfo,
                             viewModel = viewModel,
-                            currentClassName = taskTrackerBarInfo.className,
+                            currentClassName = taskTrackerBarInfo.getClassName(),
                             currentColor = currentColor,
                             showDeleteClassDialog = showDeleteClassDialog,
                             onAddTaskClicked = { showTaskDialog.value = true },
@@ -75,7 +78,7 @@ class MainScreen(private val viewModel: MainViewModel?) {
                                 text = { Text("Are you sure you want to delete the entire class and its tasks?") },
                                 confirmButton = {
                                     Button(onClick = {
-                                        viewModel?.deleteClass(taskTrackerBarInfo.className)
+                                        viewModel?.deleteClass(taskTrackerBarInfo.getClassName())
                                         showDeleteClassDialog.value = false
                                     }) {
                                         Text("Delete")
@@ -90,7 +93,8 @@ class MainScreen(private val viewModel: MainViewModel?) {
 
                         if (showTaskDialog.value) {
                             // Retrieve the list of existing task descriptions for the current class
-                            val existingTaskDescriptions = tasks.map { it.description }
+                            val existingTaskDescriptions =
+                                taskTrackerBarInfo.tasks.map { it.description }
 
                             // Show the dialog for creating a new task
                             newTaskDialog.EditTaskDialog(
@@ -99,7 +103,7 @@ class MainScreen(private val viewModel: MainViewModel?) {
                                 },
                                 onSave = { taskDescription ->
                                     viewModel?.addTaskToClass(
-                                        taskTrackerBarInfo.className, taskDescription
+                                        taskTrackerBarInfo.getClassName(), taskDescription
                                     )
                                     showTaskDialog.value = false
                                 },
@@ -250,7 +254,7 @@ fun NewClassButton(viewModel: MainViewModel?) {
     if (showDialog.value) {
         // Retrieve the list of existing class names
         val existingClassNames =
-            viewModel?.taskTrackBarInformationList?.map { it.first.className } ?: emptyList()
+            viewModel?.taskTrackBarInformationList?.map { it.getClassName() } ?: emptyList()
 
         newClassDialog.CreateClassDialog(
             onDismiss = { showDialog.value = false },

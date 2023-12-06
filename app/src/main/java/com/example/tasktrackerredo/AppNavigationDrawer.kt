@@ -93,7 +93,7 @@ class AppNavigationDrawer {
                         .fillMaxSize() // Fill the remaining space
                 ) {
                     DeleteAllInformationElement(viewModel)
-                    FAQElement()
+                    FaqElement()
 
                     Box(
                         modifier = Modifier
@@ -169,7 +169,7 @@ class AppNavigationDrawer {
     }
 
     @Composable
-    fun FAQElement() {
+    fun FaqElement() {
         Row(
             modifier = Modifier
                 .fillMaxWidth() // Fill the width of the parent
