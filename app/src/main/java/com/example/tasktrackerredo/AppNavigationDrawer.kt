@@ -116,11 +116,12 @@ class AppNavigationDrawer {
     @Composable
     fun DeleteAllInformationElement(viewModel: MainViewModel?) {
         val showDialog = remember { mutableStateOf(false) }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth() // Fill the width of the parent
-                .padding(12.dp), // Add padding around the Row
-
+                .padding(12.dp) // Add padding around the Row
+                .clickable { showDialog.value = true }, // Entire Row is clickable
             verticalAlignment = Alignment.CenterVertically // Align contents vertically to the center
         ) {
             Image(
@@ -132,12 +133,8 @@ class AppNavigationDrawer {
             Text(
                 text = "Delete all",
                 color = Color.hsl(5f, 0.81f, 0.70f),
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable {
-                        showDialog.value = true
-                    }, // Set showDialog to true to open the dialog
-                // Add other styling as needed
+                modifier = Modifier.padding(8.dp)
+                // Other styling as needed
             )
 
             // Confirmation Dialog
@@ -173,7 +170,10 @@ class AppNavigationDrawer {
         Row(
             modifier = Modifier
                 .fillMaxWidth() // Fill the width of the parent
-                .padding(12.dp), // Add padding around the Row
+                .padding(12.dp) // Add padding around the Row
+                .clickable {
+                    // Define action on click here
+                },
             verticalAlignment = Alignment.CenterVertically // Align contents vertically to the center
         ) {
             Image(

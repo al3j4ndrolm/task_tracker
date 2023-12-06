@@ -1,7 +1,9 @@
 package com.example.tasktrackerredo
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -34,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
@@ -65,6 +68,14 @@ fun TaskTrackerBar(
     var progress by remember { mutableStateOf(taskTrackerBarInformation.taskProgressPercentage) }
     val newTaskDialog = NewTaskDialog()
     var selectedTaskDescription by remember { mutableStateOf("") }
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(durationMillis = 300) // Define the duration and type of animation
+    )
+    val animatedProgress = animateFloatAsState(
+        targetValue = taskTrackerBarInformation.taskProgressPercentage,
+        animationSpec = tween(durationMillis = 1000) // Adjust the duration as needed
+    )
 
 
     // Observe changes in tasks and taskTrackerBarInformation
@@ -75,9 +86,9 @@ fun TaskTrackerBar(
         Column {
             ClassTitle(taskTrackerBarInformation, taskTrackerBarInformation.tasks.size)
             ClassProgressBar(
-                progress = taskTrackerBarInformation.taskProgressPercentage,
+                progress = animatedProgress.value,
                 color = currentColor,
-                onClick = { onAddTaskClicked() }, // This should trigger the dialog
+                onClick = { onAddTaskClicked() },
                 onLongPress = { showDeleteClassDialog.value = true }
             )
 
@@ -105,106 +116,113 @@ fun TaskTrackerBar(
             }
 
             ClassProgressBarPercentage(taskTrackerBarInformation.taskProgressPercentage)
+            Column(
+                modifier = Modifier.animateContentSize()
+            ){
+                if (expanded) {
+                    if (taskTrackerBarInformation.tasks.isEmpty()) {
+                        Text(
+                            "Press \"+\" to create a new task",
+                            modifier = Modifier.padding(16.dp),
+                            fontStyle = FontStyle.Italic
+                        )
+                    } else {
+                        taskTrackerBarInformation.tasks.forEach { task ->
+                            TasksListItem(
+                                taskInfo = task.description,
+                                isChecked = task.isCompleted,
+                                onCheckedChange = { isChecked ->
+                                    viewModel?.updateTaskCompletion(
+                                        currentClassName,
+                                        task.description,
+                                        isChecked
+                                    )
+                                },
+                                onLongPress = {
+                                    selectedTaskDescription = task.description
+                                    showDeleteDialog.value = true // Correct way to set the state
+                                },
+                                color = currentColor
+                            )
+                        }
+                    }
 
-            if (expanded) {
-                if (taskTrackerBarInformation.tasks.isEmpty()) {
-                    Text(
-                        "Press \"+\" to create a new task",
-                        modifier = Modifier.padding(16.dp),
-                        fontStyle = FontStyle.Italic
-                    )
-                } else {
-                    taskTrackerBarInformation.tasks.forEach { task ->
-                        TasksListItem(
-                            taskInfo = task.description,
-                            isChecked = task.isCompleted,
-                            onCheckedChange = { isChecked ->
-                                viewModel?.updateTaskCompletion(
-                                    currentClassName,
-                                    task.description,
-                                    isChecked
-                                )
+                    if (showDeleteDialog.value) {
+                        // Show confirmation dialog
+                        AlertDialog(
+                            onDismissRequest = {
+                                showDeleteDialog.value = false
+                            }, // Correct way to set the state
+                            containerColor = Color.LightGray,
+                            title = { Text("Delete Task") },
+                            text = { Text("Are you sure you want to delete this task?") },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        viewModel?.deleteTask(currentClassName, selectedTaskDescription)
+                                        showDeleteDialog.value = false // Correct way to set the state
+                                    },
+                                    colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.71f))
+                                ) {
+                                    Text("Confirm")
+                                }
                             },
-                            onLongPress = {
-                                selectedTaskDescription = task.description
-                                showDeleteDialog.value = true // Correct way to set the state
-                            },
-                            color = currentColor
+                            dismissButton = {
+                                Button(
+                                    onClick = {
+                                        showDeleteDialog.value = false
+                                    }, // Correct way to set the state
+                                    colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.71f))
+                                ) {
+                                    Text("Cancel")
+                                }
+                            }
                         )
                     }
-                }
 
-                if (showDeleteDialog.value) {
-                    // Show confirmation dialog
-                    AlertDialog(
-                        onDismissRequest = {
-                            showDeleteDialog.value = false
-                        }, // Correct way to set the state
-                        containerColor = Color.LightGray,
-                        title = { Text("Delete Task") },
-                        text = { Text("Are you sure you want to delete this task?") },
-                        confirmButton = {
-                            Button(
-                                onClick = {
-                                    viewModel?.deleteTask(currentClassName, selectedTaskDescription)
-                                    showDeleteDialog.value = false // Correct way to set the state
-                                },
-                                colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.71f))
-                            ) {
-                                Text("Confirm")
-                            }
-                        },
-                        dismissButton = {
-                            Button(
-                                onClick = {
-                                    showDeleteDialog.value = false
-                                }, // Correct way to set the state
-                                colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.71f))
-                            ) {
-                                Text("Cancel")
-                            }
-                        }
-                    )
-                }
+                    if (showTaskDialog.value) {
+                        // Extract existing task descriptions for the specific class
+                        val existingTaskDescriptions = viewModel?.taskTrackBarInformationList
+                            ?.firstOrNull { it.getClassName() == taskTrackerBarInformation.getClassName() }
+                            ?.tasks
+                            ?.map { it.description }
+                            ?: emptyList()
 
-                if (showTaskDialog.value) {
-                    // Extract existing task descriptions for the specific class
-                    val existingTaskDescriptions = viewModel?.taskTrackBarInformationList
-                        ?.firstOrNull { it.getClassName() == taskTrackerBarInformation.getClassName() }
-                        ?.tasks
-                        ?.map { it.description }
-                        ?: emptyList()
-
-                    newTaskDialog.EditTaskDialog(
-                        onDismiss = { showTaskDialog.value = false },
-                        onSave = { taskDescription ->
-                            viewModel?.addTaskToClass(
-                                taskTrackerBarInformation.getClassName(),
-                                taskDescription
-                            )
-                            showTaskDialog.value = false
-                        },
-                        existingTaskDescriptions = existingTaskDescriptions // Pass the existing task descriptions
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    IconButton(onClick = { onAddNewTaskClicked() }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.add_fill0_wght400_grad0_opsz24),
-                            contentDescription = "Add Task",
-                            tint = Color.LightGray
+                        newTaskDialog.EditTaskDialog(
+                            onDismiss = { showTaskDialog.value = false },
+                            onSave = { taskDescription ->
+                                viewModel?.addTaskToClass(
+                                    taskTrackerBarInformation.getClassName(),
+                                    taskDescription
+                                )
+                                showTaskDialog.value = false
+                            },
+                            existingTaskDescriptions = existingTaskDescriptions // Pass the existing task descriptions
                         )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        IconButton(onClick = { onAddNewTaskClicked() }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.add_fill0_wght400_grad0_opsz24),
+                                contentDescription = "Add Task",
+                                tint = Color.LightGray
+                            )
+                        }
                     }
                 }
             }
 
-            ClassItemExpandButton { expanded = !expanded }
+
+            ClassItemExpandButton(
+                onClick = { expanded = !expanded },
+                rotationAngle = rotationAngle
+            )
         }
     }
 }
@@ -271,27 +289,22 @@ private fun ClassProgressBarPercentage(progress: Float) {
 }
 
 @Composable
-private fun ClassItemExpandButton(onClick: () -> Unit) {
-    var isExpanded by remember { mutableStateOf(false) }
-
+private fun ClassItemExpandButton(onClick: () -> Unit, rotationAngle: Float) {
     Box(
         modifier = Modifier
             .background(Color.hsl(214f, .21f, .89f))
-            .clickable {
-                isExpanded = !isExpanded
-                onClick() // This triggers the external action, likely expanding or collapsing content
-            }
+            .fillMaxWidth() // Set the Box to fill the maximum width
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center // Center the content inside the Box
     ) {
-        val iconId = if (isExpanded) R.drawable.expand_less else R.drawable.expand_icon
-        Image(
-            painter = painterResource(id = iconId),
+        Icon(
+            painter = painterResource(id = R.drawable.expand_icon),
             contentDescription = "Expand or collapse item",
-            alignment = Alignment.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .rotate(rotationAngle) // Apply rotation to the Icon
         )
     }
 }
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TasksListItem(
