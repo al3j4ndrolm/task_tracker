@@ -54,7 +54,7 @@ class AppNavigationDrawer {
     private fun DrawerContent(
         viewModel: MainViewModel? // If needed){}){}
     ) {
-        val showDialog = remember { mutableStateOf(false) } // Define showDialog here
+        remember { mutableStateOf(false) } // Define showDialog here
 
         Box(
             modifier = Modifier
@@ -92,72 +92,9 @@ class AppNavigationDrawer {
                         .background(Color.White) // Set background color to white for this column
                         .fillMaxSize() // Fill the remaining space
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth() // Fill the width of the parent
-                            .padding(12.dp), // Add padding around the Row
+                    DeleteAllInformationElement(viewModel)
+                    FAQElement()
 
-                        verticalAlignment = Alignment.CenterVertically // Align contents vertically to the center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.delete_forever),
-                            contentDescription = "Delete forever",
-                            modifier = Modifier.size(24.dp), // Increase the size of the image
-                            colorFilter = ColorFilter.tint(Color.hsl(5f, 0.81f, 0.70f))
-                        )
-                        Text(
-                            text = "Delete all the information",
-                            color = Color.hsl(5f, 0.81f, 0.70f),
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .clickable {
-                                    showDialog.value = true
-                                }, // Set showDialog to true to open the dialog
-                            // Add other styling as needed
-                        )
-
-                        // Confirmation Dialog
-                        if (showDialog.value) {
-                            AlertDialog(
-                                onDismissRequest = { showDialog.value = false },
-                                title = { Text("Confirmation") },
-                                text = { Text("Are you sure you want to delete all classes and their tasks?") },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            viewModel?.deleteAllClassesAndTasks()
-                                            showDialog.value = false
-                                        }
-                                    ) {
-                                        Text("Confirm")
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(
-                                        onClick = { showDialog.value = false }
-                                    ) {
-                                        Text("Cancel")
-                                    }
-                                }
-                            )
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth() // Fill the width of the parent
-                            .padding(12.dp), // Add padding around the Row
-                        verticalAlignment = Alignment.CenterVertically // Align contents vertically to the center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.help),
-                            contentDescription = "Frequent Questions",
-                            modifier = Modifier.size(24.dp) // Increase the size of the image
-                        )
-                        Text(
-                            "FAQ",
-                            modifier = Modifier.padding(8.dp) // Add padding only to the start of the text
-                        )
-                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -173,6 +110,81 @@ class AppNavigationDrawer {
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    fun DeleteAllInformationElement(viewModel: MainViewModel?) {
+        val showDialog = remember { mutableStateOf(false) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth() // Fill the width of the parent
+                .padding(12.dp), // Add padding around the Row
+
+            verticalAlignment = Alignment.CenterVertically // Align contents vertically to the center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.delete_forever),
+                contentDescription = "Delete forever",
+                modifier = Modifier.size(24.dp), // Increase the size of the image
+                colorFilter = ColorFilter.tint(Color.hsl(5f, 0.81f, 0.70f))
+            )
+            Text(
+                text = "Delete all",
+                color = Color.hsl(5f, 0.81f, 0.70f),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .clickable {
+                        showDialog.value = true
+                    }, // Set showDialog to true to open the dialog
+                // Add other styling as needed
+            )
+
+            // Confirmation Dialog
+            if (showDialog.value) {
+                AlertDialog(
+                    onDismissRequest = { showDialog.value = false },
+                    title = { Text("Confirmation") },
+                    text = { Text("Are you sure you want to delete all classes and their tasks?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel?.deleteAllClassesAndTasks()
+                                showDialog.value = false
+                            }
+                        ) {
+                            Text("Confirm")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showDialog.value = false }
+                        ) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun FAQElement() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth() // Fill the width of the parent
+                .padding(12.dp), // Add padding around the Row
+            verticalAlignment = Alignment.CenterVertically // Align contents vertically to the center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.help),
+                contentDescription = "Frequent Questions",
+                modifier = Modifier.size(24.dp) // Increase the size of the image
+            )
+            Text(
+                "FAQ",
+                modifier = Modifier.padding(8.dp) // Add padding only to the start of the text
+            )
         }
     }
 }
