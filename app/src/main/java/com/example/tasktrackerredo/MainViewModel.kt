@@ -81,15 +81,4 @@ class MainViewModel : ViewModel() {
     fun deleteAllClassesAndTasks() {
         taskTrackBarInformationList.clear()
     }
-
-    private fun recalculateProgress(classIndex: Int) {
-        val tasks = taskTrackBarInformationList[classIndex].tasks
-        val completedTasks = tasks.count { it.isCompleted }
-        val progress = if (tasks.isNotEmpty()) completedTasks.toFloat() / tasks.size else 0.0f
-
-        // Update the progress in the task tracker bar information
-        val classInfo = taskTrackBarInformationList[classIndex]
-        taskTrackBarInformationList[classIndex] =
-            classInfo.copy(taskProgressPercentage = progress)
-    }
 }

@@ -7,17 +7,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
@@ -28,10 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 
 class AppNavigationDrawer {
 
@@ -139,28 +147,66 @@ class AppNavigationDrawer {
 
             // Confirmation Dialog
             if (showDialog.value) {
-                AlertDialog(
-                    onDismissRequest = { showDialog.value = false },
-                    title = { Text("Confirmation") },
-                    text = { Text("Are you sure you want to delete all classes and their tasks?") },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                viewModel?.deleteAllClassesAndTasks()
-                                showDialog.value = false
+                Dialog(onDismissRequest = { showDialog.value = false }) {
+                    // Use Surface for card-like appearance
+                    Surface(
+                        shape = RoundedCornerShape(16.dp), // Adjust the corner shape as needed
+                        color = Color.hsl(360f, 1f, .91f) // Set the background color here
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(0.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                "Confirmation",
+                                modifier = Modifier.padding(8.dp),
+                                color = Color.hsl(360f, 1f, .70f), // Adjust the color as needed
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Text(
+                                "Are you sure you want to delete all classes and their tasks?",
+                                color = Color.hsl(360f, 1f, .70f),
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(0.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                // Dismiss Button
+                                Button(
+                                    onClick = { showDialog.value = false },
+                                    modifier = Modifier.weight(1f).size(40.dp),
+                                    shape = RectangleShape, // Set button shape to rectangle (no rounded corners)
+                                    colors = ButtonDefaults.buttonColors(Color.hsl(360f, 1f, .68f))
+                                ) {
+                                    Text("Cancel")
+                                }
+
+                                Spacer(modifier = Modifier.width(2.dp)) // Separation between buttons
+
+                                // Confirm Button
+                                Button(
+                                    onClick = {
+                                        viewModel?.deleteAllClassesAndTasks()
+                                        showDialog.value = false
+                                    },
+                                    modifier = Modifier.weight(1f).size(40.dp),
+                                    shape = RectangleShape, // Set button shape to rectangle (no rounded corners)
+                                    colors = ButtonDefaults.buttonColors(Color.hsl(360f, 1f, .68f))
+                                ) {
+                                    Text("Confirm")
+                                }
                             }
-                        ) {
-                            Text("Confirm")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(
-                            onClick = { showDialog.value = false }
-                        ) {
-                            Text("Cancel")
                         }
                     }
-                )
+                }
             }
         }
     }

@@ -1,8 +1,12 @@
 package com.example.tasktrackerredo
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,12 +16,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -25,6 +30,7 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,12 +44,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 
 val colorList = listOf(
     Color.hsl(217f, 0.89f, 0.70f),
@@ -92,28 +100,69 @@ fun TaskTrackerBar(
                 onLongPress = { showDeleteClassDialog.value = true }
             )
 
-            if (showDeleteClassDialog.value) {
-                AlertDialog(
-                    onDismissRequest = { showDeleteClassDialog.value = false },
-                    title = { Text("Delete Class") },
-                    text = { Text("Are you sure you want to delete the entire class and its tasks?") },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                viewModel?.deleteClass(taskTrackerBarInformation.getClassName())
-                                showDeleteClassDialog.value = false
-                            }
+            if (showDeleteClassDialog.value){
+                Dialog(onDismissRequest = { showDeleteClassDialog.value = false }) {
+                    // Use Surface for card-like appearance
+                    Surface(
+                        shape = RoundedCornerShape(16.dp), // Adjust the corner shape as needed
+                        color = Color.hsl(360f, 1f, .91f) // Set the background color here
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(0.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text("Delete")
-                        }
-                    },
-                    dismissButton = {
-                        Button(onClick = { showDeleteClassDialog.value = false }) {
-                            Text("Cancel")
+                            Text(
+                                "Delete Class",
+                                modifier = Modifier.padding(8.dp),
+                                color = Color.hsl(360f, 1f, .70f), // Adjust the color as needed
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Text(
+                                "Are you sure you want to delete the entire class and its tasks?",
+                                color = Color.hsl(360f, 1f, .70f),
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(0.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                // Dismiss Button
+                                Button(
+                                    onClick = { showDeleteClassDialog.value = false },
+                                    modifier = Modifier.weight(1f).size(40.dp),
+                                    shape = RectangleShape, // Set button shape to rectangle (no rounded corners)
+                                    colors = ButtonDefaults.buttonColors(Color.hsl(360f, 1f, .68f))
+                                ) {
+                                    Text("Cancel")
+                                }
+
+                                Spacer(modifier = Modifier.width(2.dp)) // Separation between buttons
+
+                                // Confirm Button
+                                Button(
+                                    onClick = {
+                                        viewModel?.deleteClass(taskTrackerBarInformation.getClassName())
+                                        showDeleteClassDialog.value = false
+                                    },
+                                    modifier = Modifier.weight(1f).size(40.dp),
+                                    shape = RectangleShape, // Set button shape to rectangle (no rounded corners)
+                                    colors = ButtonDefaults.buttonColors(Color.hsl(360f, 1f, .68f))
+                                ) {
+                                    Text("Delete")
+                                }
+                            }
                         }
                     }
-                )
+                }
             }
+
 
             ClassProgressBarPercentage(taskTrackerBarInformation.taskProgressPercentage)
             Column(
@@ -149,35 +198,66 @@ fun TaskTrackerBar(
 
                     if (showDeleteDialog.value) {
                         // Show confirmation dialog
-                        AlertDialog(
-                            onDismissRequest = {
-                                showDeleteDialog.value = false
-                            }, // Correct way to set the state
-                            containerColor = Color.LightGray,
-                            title = { Text("Delete Task") },
-                            text = { Text("Are you sure you want to delete this task?") },
-                            confirmButton = {
-                                Button(
-                                    onClick = {
-                                        viewModel?.deleteTask(currentClassName, selectedTaskDescription)
-                                        showDeleteDialog.value = false // Correct way to set the state
-                                    },
-                                    colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.71f))
+                        Dialog(onDismissRequest = { showDeleteDialog.value = false }) {
+                            // Use Surface for card-like appearance
+                            Surface(
+                                shape = RoundedCornerShape(16.dp), // Adjust the corner shape as needed
+                                color = Color.hsl(360f, 1f, .91f) // Set the background color here
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(0.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text("Confirm")
-                                }
-                            },
-                            dismissButton = {
-                                Button(
-                                    onClick = {
-                                        showDeleteDialog.value = false
-                                    }, // Correct way to set the state
-                                    colors = ButtonDefaults.buttonColors(Color.hsl(217f, 0.89f, 0.71f))
-                                ) {
-                                    Text("Cancel")
+                                    Text(
+                                        "Delete Task",
+                                        modifier = Modifier
+                                            .padding(8.dp),
+                                        color = Color.hsl(360f, 1f, .70f), // Adjust the color as needed
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+
+                                    Text("Are you sure you want to delete this task?",
+                                        color = Color.hsl(360f, 1f, .70f))
+
+                                    Spacer(modifier = Modifier.height(0.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        // Dismiss Button
+                                        Button(
+                                            onClick = { showDeleteDialog.value = false },
+                                            modifier = Modifier.weight(1f).size(40.dp),
+                                            shape = RectangleShape, // Set button shape to rectangle (no rounded corners)
+                                            colors = ButtonDefaults.buttonColors(Color.hsl(360f, 1f, .68f))
+                                        ) {
+                                            Text("Cancel")
+                                        }
+//
+
+                                        Spacer(modifier = Modifier.width(2.dp)) // Separation between buttons
+
+//                                        Confirm Button
+                                        Button(
+                                            onClick = {
+                                                viewModel?.deleteTask(currentClassName, selectedTaskDescription)
+                                                showDeleteDialog.value = false
+                                            },
+                                            modifier = Modifier.weight(1f).size(40.dp),
+                                            shape = RectangleShape, // Set button shape to rectangle (no rounded corners)
+                                            colors = ButtonDefaults.buttonColors(Color.hsl(360f, 1f, .68f))
+                                        ) {
+                                            Text("Confirm")
+                                        }
+                                    }
                                 }
                             }
-                        )
+                        }
                     }
 
                     if (showTaskDialog.value) {
@@ -305,40 +385,41 @@ private fun ClassItemExpandButton(onClick: () -> Unit, rotationAngle: Float) {
         )
     }
 }
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
 private fun TasksListItem(
     taskInfo: String,
     isChecked: Boolean,
+//    isNew: Boolean, // New parameter to indicate if the task is new
     onCheckedChange: (Boolean) -> Unit,
     onLongPress: () -> Unit,
     color: Color
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(45.dp)
-            .combinedClickable(
-                onClick = { /* Handle click if necessary */ },
-                onLongClick = { onLongPress() }
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(
-                checkedColor = color,
-                uncheckedColor = Color.Gray, // Or any other color for the unchecked state
-                checkmarkColor = Color.White
-            ), // Color of the checkmark
-            modifier = Modifier.padding(start = 10.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(45.dp)
+                .combinedClickable(
+                    onClick = { /* Handle click if necessary */ },
+                    onLongClick = { onLongPress() }
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = isChecked,
+                onCheckedChange = onCheckedChange,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = color,
+                    uncheckedColor = Color.Gray,
+                    checkmarkColor = Color.White
+                ),
+                modifier = Modifier.padding(start = 10.dp)
+            )
 
-        Text(
-            text = taskInfo,
-            modifier = Modifier.padding(start = 10.dp)
-        )
+            Text(
+                text = taskInfo,
+                modifier = Modifier.padding(start = 10.dp)
+            )
+        }
     }
-}
 

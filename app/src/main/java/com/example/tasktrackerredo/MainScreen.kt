@@ -1,6 +1,8 @@
 package com.example.tasktrackerredo
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
@@ -69,27 +72,6 @@ class MainScreen(private val viewModel: MainViewModel?) {
                             showTaskDialog = showTaskDialog,
                             onAddNewTaskClicked = { showTaskDialog.value = true })
 
-                        if (showDeleteClassDialog.value) {
-                            // AlertDialog logic for deleting the class
-                            AlertDialog(onDismissRequest = {
-                                showDeleteClassDialog.value = false
-                            },
-                                title = { Text("Delete Class") },
-                                text = { Text("Are you sure you want to delete the entire class and its tasks?") },
-                                confirmButton = {
-                                    Button(onClick = {
-                                        viewModel?.deleteClass(taskTrackerBarInfo.getClassName())
-                                        showDeleteClassDialog.value = false
-                                    }) {
-                                        Text("Delete")
-                                    }
-                                },
-                                dismissButton = {
-                                    Button(onClick = { showDeleteClassDialog.value = false }) {
-                                        Text("Cancel")
-                                    }
-                                })
-                        }
 
                         if (showTaskDialog.value) {
                             // Retrieve the list of existing task descriptions for the current class
@@ -195,18 +177,32 @@ private fun HeaderText() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HeaderMenuButton(drawerState: DrawerState, coroutineScope: CoroutineScope) {
+    val isDrawerOpen by derivedStateOf { drawerState.isOpen }
+
+    // Animate the rotation
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isDrawerOpen) 180f else 0f,
+        animationSpec = tween(durationMillis = 200) // Adjust duration as needed
+    )
+
+    // Determine which icon to display based on the rotation angle
+    val iconId = when {
+        rotationAngle > 90f -> R.drawable.menu_open
+        else -> R.drawable.menu_button
+    }
+
     Image(
-        painter = painterResource(id = R.drawable.menu_button),
-        contentDescription = "",
+        painter = painterResource(id = iconId),
+        contentDescription = if (isDrawerOpen) "Close menu" else "Open menu",
         modifier = Modifier
             .padding(horizontal = 8.dp)
             .size(30.dp)
             .clickable {
-                // Open the drawer when the menu button is clicked
                 coroutineScope.launch {
-                    drawerState.open()
+                    if (drawerState.isOpen) drawerState.close() else drawerState.open()
                 }
-            },
+            }
+            .rotate(rotationAngle),
         alignment = Alignment.CenterEnd,
         colorFilter = ColorFilter.tint(Color.hsl(214f, .21f, .68f))
     )
